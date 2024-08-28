@@ -59,3 +59,5 @@ build
 *.log
 
 doxygen
+
+template.txt
