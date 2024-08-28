@@ -5,8 +5,8 @@
 
 enum ErrorCode
 {
-    ERROR_SUCCESS,
-    ERROR_FAILURE
+    ERROR_SUCCESS = 0,
+    ERROR_FAILURE = 1,
 };
 
 typedef struct Row
@@ -29,19 +29,19 @@ int main()
     if (input_array(&array, &size_y, &rows) == ERROR_FAILURE)
     {
         fprintf(stderr, "INPUT FAILURE\n");
-        return -1;
+        return EXIT_FAILURE;
     }
 
     if (print_array((const Row* const)rows, (const size_t)size_y) == ERROR_FAILURE)
     {
         fprintf(stderr, "PRINT FAILURE\n");
-        return -1;
+        return EXIT_FAILURE;
     }
 
     if (free_array(&array, &size_y, &rows) == ERROR_FAILURE)
     {
         fprintf(stderr, "FREE FAILURE\n");
-        return -1;
+        return EXIT_FAILURE;
     }
     
     return 0;
@@ -58,8 +58,10 @@ enum ErrorCode input_array(int*** const array, size_t* const size_y, Row** const
     if (scanf("%zu", size_y) != 1 || size_y == 0)
         return ERROR_FAILURE;
     
-    *array = (int**)calloc(*size_y, sizeof(**array));
-    *rows = (Row*)calloc(*size_y + 1, sizeof(**rows));
+    if ((*array = (int**)calloc(*size_y, sizeof(**array))) == NULL)
+        return ERROR_FAILURE;
+    if ((*rows = (Row*)calloc(*size_y + 1, sizeof(**rows))) == NULL)
+        return ERROR_FAILURE;
 
     size_t size_x = 0;
     for (size_t y = 0; y < *size_y; ++y)
@@ -71,7 +73,9 @@ enum ErrorCode input_array(int*** const array, size_t* const size_y, Row** const
         if (scanf("%zu", &size_x) != 1)
             return ERROR_FAILURE;
 
-        (*array)[y] = (int*)calloc(size_x, sizeof(***array));
+        if (((*array)[y] = (int*)calloc(size_x, sizeof(***array))) == NULL)
+            return ERROR_FAILURE;
+
         (*rows)[y].start = &(*array)[y][0];
         (*rows)[y].end = &(*array)[y][0] + size_x;
 
@@ -92,6 +96,7 @@ enum ErrorCode free_array (int*** const array, size_t* const size_y, Row** const
     assert(size_y);
     assert(rows);
 
+
     for (size_t y = 0; y < *size_y; ++y)
     {
         free((*array)[y]); (*array)[y] = NULL;
@@ -104,6 +109,8 @@ enum ErrorCode free_array (int*** const array, size_t* const size_y, Row** const
 
 enum ErrorCode print_array(const Row* const rows, const size_t size_y)
 {
+    assert(rows);
+    
     for(size_t y = 0; y < size_y; ++y)
     {
         for (const int* x_ptr = rows[y].start; x_ptr < rows[y].end; ++x_ptr)
